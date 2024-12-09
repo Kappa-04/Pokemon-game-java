@@ -10,7 +10,6 @@ public class StatChange {
 		return change;
 	}
 	public StatChange(String stat, int change) {
-		super();
 		this.stat = stat;
 		this.change = change;
 	}

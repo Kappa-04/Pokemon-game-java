@@ -25,7 +25,8 @@ public abstract class Utils {
 	}
 	
 	public static void applyStatusEffects(Pokemon pokemon) {
-	    switch (pokemon.getStatus()) {
+		for(Status status : pokemon.getStatusManager().getActiveStatuses()) {
+	    switch (status) {
 	        case BURN:
 	            pokemon.setCurrentHp(pokemon.getCurrentHp() - 10); // Example fixed damage
 	            System.out.println(pokemon.getName() + " is hurt by its burn!");
@@ -37,13 +38,13 @@ public abstract class Utils {
 	        case SLEEP:
 	            if (pokemon.getStatusDuration() > 0) {
 	                System.out.println(pokemon.getName() + " is fast asleep.");
-	                pokemon.reduceStatusDuration();
+	                pokemon.reduceStatusDuration(pokemon, status);
 	            }
 	            break;
 	        case FROZEN:
 	            if (extractInt(0, 100) < 20) { 
 	                System.out.println(pokemon.getName() + " thawed out!");
-	                pokemon.setStatus(Status.NONE);
+	                pokemon.getStatusManager().removeStatus(Status.FROZEN);
 	            } else {
 	                System.out.println(pokemon.getName() + " is frozen solid.");
 	            }
@@ -51,7 +52,8 @@ public abstract class Utils {
 	        default:
 	            break;
 	    }
-	}
+	  }
+    }
 	
 	
 
@@ -74,7 +76,7 @@ public abstract class Utils {
 		
 		if(attacker.getType1() == move.getType() || attacker.getType2() == move.getType()) STAB = 1.5;
 		else STAB = 1;
-		if(attacker.getStatus() == Status.BURN) burn = 0.5;
+		if(attacker.getStatusManager().hasStatus(Status.BURN)) burn = 0.5;
 		if(defender.getType1()
 				.getWeaknessesList()
 				.containsKey(move.getType().toString())) 
@@ -86,7 +88,7 @@ public abstract class Utils {
 		
 		if(move.getCategoria() == Category.Status) return 0;
 		
-		if (attacker.getStatus() == Status.PARALYSIS) {
+		if (attacker.getStatusManager().hasStatus(Status.PARALYSIS)) {
 		    if (extractInt(0, 100) < 25) { 
 		        System.out.println(attacker.getName() + " is paralyzed and cannot move!");
 		        return 0;

@@ -42,11 +42,13 @@ public class Battle {
         
         Utils.applyStatusEffects(playerPokemon);
         Utils.applyStatusEffects(opponentPokemon);
-        Utils.applyStatusEffects(playerPokemon);
-        playerPokemon.getStatus().applyDotEffect(playerPokemon);
-
-        Utils.applyStatusEffects(opponentPokemon);
-        opponentPokemon.getStatus().applyDotEffect(opponentPokemon);
+        for(Status status : playerPokemon.getStatusManager().getActiveStatuses()) {
+        	if(status.equals(Status.DOT)) status.applyDotEffect(playerPokemon);
+        }
+        
+        for(Status status : opponentPokemon.getStatusManager().getActiveStatuses()) {
+        	if(status.equals(Status.DOT)) status.applyDotEffect(opponentPokemon);
+        }
 
 
         if (isBattleOver()) {
@@ -74,11 +76,11 @@ public class Battle {
         isPlayerTurn = !isPlayerTurn;
     }
 
-    private void skipTurn(Pokemon pokemon) {
+    public void skipTurn(Pokemon pokemon) {
         System.out.println(pokemon.getName() + " flinched and couldn't move!");
     }
 
-    private void applyStatChange(Pokemon target, String stat, int change) {
+    public void applyStatChange(Pokemon target, String stat, int change) {
         switch (stat.toUpperCase()) {
             case "ATK":
                 target.setAtkStage(target.getAtkStage() + change);
@@ -99,7 +101,7 @@ public class Battle {
         System.out.println(target.getName() + "'s " + stat + " changed by " + change + "!");
     }
     
-    private void handleOneHitKO(Pokemon attacker, Pokemon defender, Move move) {
+    public void handleOneHitKO(Pokemon attacker, Pokemon defender, Move move) {
 	    int chance = Utils.extractInt(1, 100); // Simulate hit chance
 	    if (chance <= move.getAccuracy()) {
 	        defender.setCurrentHp(0);
@@ -111,18 +113,21 @@ public class Battle {
     
     public void switchPokemon(Pokemon newPokemon, boolean isPlayer) {
         if (isPlayer) {
-        	if (playerPokemon.getStatus().isPersistentEffect()) {
-        	    playerPokemon.getStatus().clearDotEffect();
+        	for(Status status : playerPokemon.getStatusManager().getActiveStatuses()) {
+        		if (status.isPersistentEffect()) {
+        	    status.clearDotEffect();;
         	    System.out.println(playerPokemon.getName() + "'s Leech Seed wore off!");
+        		}
         	}
             playerPokemon = newPokemon;
             System.out.println("Player switched to " + newPokemon.getName() + "!");
         } else {
-        	if (opponentPokemon.getStatus().isPersistentEffect()) {
-        	    opponentPokemon.getStatus().clearDotEffect();
+        	for(Status status : opponentPokemon.getStatusManager().getActiveStatuses()) {
+        		if (status.isPersistentEffect()) {
+        	    status.clearDotEffect();;
         	    System.out.println(opponentPokemon.getName() + "'s Leech Seed wore off!");
+        		}
         	}
-
             opponentPokemon = newPokemon;
             System.out.println("Opponent switched to " + newPokemon.getName() + "!");
         }
@@ -133,33 +138,14 @@ public class Battle {
         opponentPokemon = newPokemon;
         System.out.println("Opponent was forced to switch to " + newPokemon.getName());
     }
+    
+    
 
     
     public void applyMoveEffects(Pokemon attacker, Pokemon defender, Move move) {
         int totalDamageDealt = 0;
 
         for (SecondaryEffect effect : move.getSecondaryEffects()) {
-        	if (effect.getEffectType().equals("DRAIN_HP") || effect.getEffectType().equals("DOT")) {
-        	    int damage = Utils.damage(attacker, move, defender);
-        	    defender.setCurrentHp(Math.max(0, defender.getCurrentHp() - damage)); // Apply immediate damage
-        	    int drainedHp = (int) (damage * effect.getDrainPercentage());
-        	    if (effect.getDuration() == -1 || defender.getStatus().isPersistentEffect()) { 
-        	        defender.getStatus().setDotEffect(move.getName(), effect.getDrainPercentage(), -1, true);
-        	        System.out.println(defender.getName() + " is seeded by " + move.getName() + "!");
-        	    }
-
-
-        	    if (effect.getDuration() == 0) { // Instant drain (e.g., Giga Drain)
-        	        attacker.setCurrentHp(Math.min(attacker.getMaxHp(), attacker.getCurrentHp() + drainedHp));
-        	        System.out.println(attacker.getName() + " drained " + drainedHp + " HP from " + defender.getName() + "!");
-        	    } else { // DoT effect (e.g., Leech Seed)
-        	        defender.getStatus().setDotEffect(move.getName(), effect.getDrainPercentage(), effect.getDuration(), false);
-        	        System.out.println(defender.getName() + " is affected by " + move.getName() + " for " + effect.getDuration() + " turns!");
-        	    }
-        	}
-
-
-
             if (effect.getEffectType().equals("COUNTER")) {
                 int counterDamage = effect.getLastDamageDealt() * 2; // Counter deals double damage
                 attacker.setCurrentHp(attacker.getCurrentHp() - counterDamage);
@@ -186,27 +172,27 @@ public class Battle {
                 if (chance <= effect.getChance()) {
                     switch (effect.getEffectType()) {
                         case "PARALYZE":
-                            defender.setStatus(Status.PARALYSIS);
+                            defender.getStatusManager().addStatus(Status.PARALYSIS);
                             System.out.println(defender.getName() + " is paralyzed!");
                             break;
                         case "BURN":
-                            defender.setStatus(Status.BURN);
+                            defender.getStatusManager().addStatus(Status.BURN);
                             System.out.println(defender.getName() + " is burned!");
                             break;
                         case "FREEZE":
-                            defender.setStatus(Status.FROZEN);
+                            defender.getStatusManager().addStatus(Status.FROZEN);
                             System.out.println(defender.getName() + " is frozen solid!");
                             break;
                         case "SLEEP":
-                            defender.setStatus(Status.SLEEP);
+                            defender.getStatusManager().addStatus(Status.SLEEP);
                             System.out.println(defender.getName() + " fell asleep!");
                             break;
                         case "POISON":
-                            defender.setStatus(Status.POISON);
+                            defender.getStatusManager().addStatus(Status.POISON);
                             System.out.println(defender.getName() + " is now poisoned!");
                             break;
                         case "CONFUSION":
-                            defender.setStatus(Status.CONFUSION);
+                            defender.getStatusManager().addStatus(Status.CONFUSION);
                             System.out.println(defender.getName() + " is now confused!");
                             break;
                         case "STAT CHANGE":
@@ -217,7 +203,18 @@ public class Battle {
                             skipTurn(defender);
                             break;
                         case "DRAIN_HP":
+                        	totalDamageDealt = Utils.damage(attacker, move, defender);
+                        	attacker.setCurrentHp((int)(attacker.getCurrentHp() + totalDamageDealt*effect.getDrainPercentage()));
+                        	System.out.println(attacker.getName() + "drained " + totalDamageDealt*effect.getDrainPercentage() + "HP!");
                         	break;
+                        case "DOT":
+                        	defender.getStatusManager().addStatus(Status.DOT);
+                        	for(Status status : defender.getStatusManager().getActiveStatuses()) {
+                        		if(status.isDotEffect()) {
+                        			status.setDotEffect(move.getName(), status.getDotDamagePercentage(),
+                        			status.getDotDuration(), status.isPersistentEffect());
+                        		}
+                        	}
                         
                     }
                 }

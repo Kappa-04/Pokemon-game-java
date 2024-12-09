@@ -22,6 +22,12 @@ public class Pokemon {
 	private int evolutionLvl;
 	private ArrayList<Move> moveList;
 	private StatusManager statusManager;
+	private long exp;
+	private int statusDuration; 
+	private boolean isStatusActive; 
+	public enum Stat {
+		ATTACK, DEFENSE, SP_ATTACK, SP_DEFENSE, SPEED, HP
+	}
 	public int getSpAtkStage() {
 		return spAtkStage;
 	}
@@ -46,12 +52,7 @@ public class Pokemon {
 	public StatusManager getStatusManager() {
 		return statusManager;
 	}
-	private long exp;
-	private int statusDuration; 
-	private boolean isStatusActive; 
-	public enum Stat {
-		ATTACK, DEFENSE, SP_ATTACK, SP_DEFENSE, SPEED, HP
-	}
+	
 	
 	public Pokemon(String name, int explevel, Type type1, Type type2, int evolutionLvl,
 								ArrayList<Move> moveList, BufferedImage img, long exp) {
@@ -69,11 +70,11 @@ public class Pokemon {
 			e.printStackTrace();
 		}
 	}
-	public void reduceStatusDuration() {
+	public void reduceStatusDuration(Pokemon pokemon, Status status) {
 	    if (statusDuration > 0) {
 	        statusDuration--;
 	        if (statusDuration == 0) {
-	            status = Status.NONE;
+	            pokemon.getStatusManager().removeStatus(status);
 	            isStatusActive = false;
 	        }
 	    }

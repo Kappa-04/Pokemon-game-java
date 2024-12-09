@@ -51,7 +51,7 @@ public class Move {
 	}
 
 	public void setCritRate(double critRate) {
-		this.critRate = critRate;
+		Move.critRate = critRate;
 	}
 
 	public int getBasePower() {
